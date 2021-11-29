@@ -1,0 +1,33 @@
+﻿@page "/soamapdemo"
+@using System.Reactive.Linq
+@using System.Reactive
+@using ReactiveUI.Blazor
+@using Soatech.Blazor.Leaflet
+@using Soatech.Blazor.Leaflet.Samples.ViewModels
+
+@inherits ReactiveInjectableComponentBase<SoaMapDemoViewModel>
+
+
+<div style="background: #FF0000; padding: 10px; width: 100%; height: 100%">
+  <SoaMap
+    @ref="_mapControl"
+    @bind-MinZoom="ViewModel.MinZoom" 
+    @bind-MaxZoom="ViewModel.MaxZoom" 
+    @bind-CurrentZoom="ViewModel.Zoom" 
+    @bind-Center="ViewModel.Center"
+    @bind-TileSourceTemplate="ViewModel.TileLayer" 
+    ShowZoomControl="false" 
+    ShowAttributionControl="false">
+  </SoaMap>
+</div>
+
+<div>
+    <h3>Center</h3>
+    <div>Lat: <input @bind-value="ViewModel.CenterLat" /></div>
+    <div>Lng: <input @bind-value="ViewModel.CenterLng" /></div>
+    
+    <h3>Zoom</h3>
+    <div>Min-Zoom: <input @bind-value="ViewModel.MinZoom" /></div>
+    <div>Max-Zoom: <input @bind-value="ViewModel.MaxZoom" /></div>
+    <div>Current Zoom: <input @bind-value="ViewModel.Zoom" /></div>
+</div>

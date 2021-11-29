@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Blazor" Version="16.3.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Soatech.Blazor.Leaflet\Soatech.Blazor.Leaflet.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>Soatech GmbH</Authors>
+    <DefaultDotNetVersion>net6.0</DefaultDotNetVersion>
+    <DocumentationFile>.generated/$(MSBuildProjectName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <None Include="../.editorconfig" Link=".editorconfig" Visible="false" />
+    <AdditionalFiles Include="../stylecop.json" Link="stylecop.json" Visible="false" /> -->
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
-PROJECT_NAME=BlazorLeaflet
+PROJECT_NAME=Soatech.Blazor.Leaflet
 PROJECT_NUMBER=1.0.0
-PROJECT_BRIEF=BlazorLeaflet is a Blazor component wrapping Leaflet's APIs, offering a simple and homogeneous implementation of the Leaflet maps.
+PROJECT_BRIEF=Soatech.Blazor.Leaflet is a Blazor component wrapping Leaflet's APIs, offering a simple and homogeneous implementation of the Leaflet maps.
 PROJECT_LOGO=./media/logo.png
 
 OUTPUT_DIRECTORY=./docs
@@ -11,6 +11,6 @@ HTML_EXTRA_STYLESHEET=./docs_extras/doxygen.css
 
 GENERATE_LATEX=NO
 
-INPUT=./BlazorLeaflet/BlazorLeaflet
+INPUT=./Source/Soatech.Blazor.Leaflet
 FILE_PATTERNS=*.cs
 RECURSIVE=YES

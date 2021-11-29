@@ -1,0 +1,54 @@
+﻿{
+  // ACTION REQUIRED: This file was automatically added to your project, but it
+  // will not take effect until additional steps are taken to enable it. See the
+  // following page for additional information:
+  //
+  // https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/EnableConfiguration.md
+
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+  "settings": {
+    "documentationRules": {
+      "companyName": "Soatech GmbH",
+      "documentExposedElements": true,
+      "documentInterfaces": true,
+      "documentInternalElements": true,
+      "documentPrivateElements": false,
+      "documentPrivateFields": false,
+      "documentationCulture": "en-US",
+      "excludeFromPunctuationCheck": [ ],
+      "fileNamingConvention": "metadata",
+      "variables": {},
+      "xmlHeader": true
+    },
+    "indentation": {
+      "indentationSize": 4,
+      "tabSize": 4,
+      "useTabs": false
+    },
+    "layoutRules": {
+      "allowConsecutiveUsings": true,
+      "newlineAtEndOfFile": "allow"
+    },
+    "maintainabilityRules": {
+      "topLevelTypes": [ "class", "interface", "struct" ]
+    },
+    "namingRules": {
+      "allowCommonHungarianPrefixes": false,
+      "allowedHungarianPrefixes": [],
+      "allowedNamespaceComponents": [],
+      "includeInferredTupleElementNames": true,
+      "tupleElementNameCasing": "PascalCase"
+    },
+    "orderingRules": {
+      "blankLinesBetweenUsingGroups": "require",
+      "elementOrder": [ "constant", "kind", "accessibility", "static", "readonly" ],
+      "systemUsingDirectivesFirst": true,
+      "usingDirectivesPlacement": "insideNamespace"
+    },
+    "readabilityRules": {
+      "allowBuiltInTypeAliases": true
+    },
+    "spacingRules": {
+    }
+  }
+}

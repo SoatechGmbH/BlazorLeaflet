@@ -1,0 +1,6 @@
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime _jsRuntime
+
+<div id="@Id" class="@_cssStyle"></div>
+
+<button onclick="@(() => OnButtonClicked())">Bla</button>
