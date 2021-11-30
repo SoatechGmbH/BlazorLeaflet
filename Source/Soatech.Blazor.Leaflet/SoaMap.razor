@@ -3,4 +3,7 @@
 
 <div id="@Id" class="@_cssStyle"></div>
 
-<button onclick="@(() => OnButtonClicked())">Bla</button>
+<button onclick="@(() => OnButtonClicked())">Show World</button>
+<CascadingValue Value="this">
+@this.Layers
+</CascadingValue>

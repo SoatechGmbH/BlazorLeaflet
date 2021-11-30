@@ -3,23 +3,24 @@
 @using System.Reactive
 @using ReactiveUI.Blazor
 @using Soatech.Blazor.Leaflet
+@using Soatech.Blazor.Leaflet.Layers
 @using Soatech.Blazor.Leaflet.Samples.ViewModels
 
 @inherits ReactiveInjectableComponentBase<SoaMapDemoViewModel>
 
 
-<div style="background: #FF0000; padding: 10px; width: 100%; height: 100%">
-  <SoaMap
+<SoaMap
     @ref="_mapControl"
     @bind-MinZoom="ViewModel.MinZoom" 
     @bind-MaxZoom="ViewModel.MaxZoom" 
     @bind-CurrentZoom="ViewModel.Zoom" 
     @bind-Center="ViewModel.Center"
-    @bind-TileSourceTemplate="ViewModel.TileLayer" 
     ShowZoomControl="false" 
     ShowAttributionControl="false">
-  </SoaMap>
-</div>
+    <Layers>
+        <TileLayer @bind-TileSourceTemplate="ViewModel.TileLayer"></TileLayer>
+    </Layers>
+</SoaMap>
 
 <div>
     <h3>Center</h3>

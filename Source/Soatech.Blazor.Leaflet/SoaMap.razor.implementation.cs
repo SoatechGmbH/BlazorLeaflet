@@ -7,24 +7,33 @@ using Soatech.Blazor.Leaflet.Models;
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace Soatech.Blazor.Leaflet
 {
     public partial class SoaMap : ComponentBase, INotifyPropertyChanged, IDisposable
     {
-        private readonly string _id = $"{Guid.NewGuid()}";
+        #region Variables
+
         private readonly string _cssStyle = "soamap";
         private readonly CompositeDisposable _disposables = new();
+        private readonly ObservableCollection<LayerComponent> _layers = new();
 
-        private string _tileSourceTemplate = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
         private float _minZoom = 2;
         private float _maxZoom = 10;
         private float _zoom = 8;
         private LatLng _center = new(0, 0);
+        private (LatLng sw, LatLng ne)? _maxBounds;
+
+        #endregion
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public string Id => _id;
+        #region Parameters
+
+        [Parameter]
+        public string Id { get; set; } = $"{Guid.NewGuid()}";
 
         [Parameter]
         public bool ShowZoomControl { get; set; } = true;
@@ -120,23 +129,30 @@ namespace Soatech.Blazor.Leaflet
         public Action<LatLng>? CenterChanged { get; set; }
 
         [Parameter]
-        public string TileSourceTemplate
+        public (LatLng sw, LatLng ne)? MaxBounds
         {
-            get => _tileSourceTemplate;
+            get => _maxBounds;
             set
             {
-                if (_tileSourceTemplate == value) return;
+                if (_maxBounds == value) return;
 
-                _tileSourceTemplate = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TileSourceTemplate)));
+                _maxBounds = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MaxBounds)));
             }
         }
 
         [Parameter]
-        public Action<string>? TileSourceTemplateChanged { get; set; }
+        public Action<(LatLng sw, LatLng ne)?>? MaxBoundsChanged { get; set; }
 
         [Parameter]
         public Func<MouseEvent, ValueTask>? OnConextMenu { get; set; }
+
+        [Parameter]
+        public RenderFragment Layers { get; set; }
+
+        #endregion
+
+        public ObservableCollection<LayerComponent> MapLayers => _layers;
 
         protected override void OnInitialized()
         {
@@ -146,27 +162,27 @@ namespace Soatech.Blazor.Leaflet
 
             _disposables.Add(this.WhenChanged(nameof(MinZoom))
                 .Select(_ => MinZoom)
-                .Subscribe(z => MinZoomChanged?.Invoke(z)));
+                .Subscribe(mz => MinZoomChanged?.Invoke(mz)));
             
             _disposables.Add(this.WhenChanged(nameof(MaxZoom))
                 .Select(_ => MaxZoom)
-                .Subscribe(z => MaxZoomChanged?.Invoke(z)));
+                .Subscribe(mz => MaxZoomChanged?.Invoke(mz)));
             
             _disposables.Add(this.WhenChanged(nameof(CurrentZoom))
                 .Select(_ => CurrentZoom)
-                .Subscribe(z => CurrentZoomChanged?.Invoke(z)));
+                .Subscribe(cz => CurrentZoomChanged?.Invoke(cz)));
             
             _disposables.Add(this.WhenChanged(nameof(ShowZoomControl))
                 .Select(_ => ShowZoomControl)
-                .Subscribe(z => ShowZoomControlChanged?.Invoke(z)));
+                .Subscribe(sz => ShowZoomControlChanged?.Invoke(sz)));
             
             _disposables.Add(this.WhenChanged(nameof(ShowAttributionControl))
                 .Select(_ => ShowAttributionControl)
-                .Subscribe(z => ShowAttributionControlChanged?.Invoke(z)));
+                .Subscribe(ac => ShowAttributionControlChanged?.Invoke(ac)));
 
-            _disposables.Add(this.WhenChanged(nameof(TileSourceTemplate))
-                .Select(_ => TileSourceTemplate)
-                .Subscribe(z => TileSourceTemplateChanged?.Invoke(z)));
+            _disposables.Add(this.WhenChanged(nameof(MaxBounds))
+                .Select(_ => MaxBounds)
+                .Subscribe(mb => MaxBoundsChanged?.Invoke(mb)));
 
             base.OnInitialized();
         }
@@ -177,31 +193,25 @@ namespace Soatech.Blazor.Leaflet
             {
                 await InitializeJsMap();
 
-                var config = new TileLayerConfiguration()
-                {
-                    UrlTemplate = TileSourceTemplate,
-                    TileSize = 512,
-                    ZoomOffset = -1,
-                    Attribution = "Map data &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors, Imagery © <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a>"
-                };
-
-                await CreateTileLayer(config);
-
                 _disposables.Add(this.WhenChanged(nameof(Center))
                     .Merge(this.WhenChanged(nameof(CurrentZoom)))
                     .Merge(this.WhenChanged(nameof(MinZoom)))
                     .Merge(this.WhenChanged(nameof(MaxZoom)))
                     .Throttle(TimeSpan.FromMilliseconds(100))
-                    .SelectMany(_ => FlyTo(Center, CurrentZoom))
+                    .SelectMany(_ => 
+                        FlyTo(Center, CurrentZoom)
+                        .AsTask()
+                        .ToObservable()
+                    )
                     .Subscribe());
 
-                _disposables.Add(this.WhenChanged(nameof(TileSourceTemplate))
+
+                foreach (var layer in MapLayers)
+                    await layer.CreateNativeComponent();
+
+                _disposables.Add(this.WhenChanged(nameof(MaxBounds))
                     .Throttle(TimeSpan.FromMilliseconds(100))
-                    .SelectMany(_ => 
-                    {
-                        config.UrlTemplate = TileSourceTemplate;
-                        return CreateTileLayer(config);
-                     })
+                    .SelectMany(_ => FlyTo(Center, CurrentZoom).AsTask().ToObservable())
                     .Subscribe());
 
                 await SetView(Center, CurrentZoom);
@@ -218,6 +228,9 @@ namespace Soatech.Blazor.Leaflet
 
         public void Dispose()
         {
+            foreach (var layer in MapLayers)
+                layer?.Dispose();
+
             _disposables?.Dispose();
             GC.SuppressFinalize(this);
         }

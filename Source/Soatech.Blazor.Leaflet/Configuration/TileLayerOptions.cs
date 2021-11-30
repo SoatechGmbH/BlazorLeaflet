@@ -1,6 +1,6 @@
 ﻿namespace Soatech.Blazor.Leaflet.Configuration
 {
-    internal class TileLayerConfiguration
+    public class TileLayerOptions
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
 

@@ -1,8 +1,6 @@
-﻿using Soatech.Blazor.Leaflet;
-using System;
-using System.Reactive;
+﻿using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
+using System.Reactive.Threading.Tasks;
 
 namespace Soatech.Blazor.Leaflet.Samples.Pages
 {
@@ -13,7 +11,11 @@ namespace Soatech.Blazor.Leaflet.Samples.Pages
         protected override Task OnInitializedAsync()
         {
             Observable.Timer(TimeSpan.FromSeconds(10))
-                .SelectMany(_ => _mapControl?.FlyTo(new() { Lat = 53.57532f, Lng = 10.01534f }, 6) ?? Observable.Empty<Unit>())
+                .SelectMany(_ => 
+                    _mapControl?.FlyTo(new() { Lat = 53.57532f, Lng = 10.01534f }, 6)
+                        .AsTask()
+                        .ToObservable() 
+                    ?? Observable.Empty<Unit>())
                 .Subscribe();
 
             Observable.Timer(TimeSpan.FromSeconds(20))

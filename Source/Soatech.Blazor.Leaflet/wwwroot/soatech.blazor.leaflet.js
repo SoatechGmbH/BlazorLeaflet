@@ -1,117 +1,91 @@
-﻿window.soamap = function () {
+﻿window.soamap = {
 
-    const my = this;
+    create: function (id, options, dotNet) {
 
-    this._id = "";
-    this._leaflet = null;
-    this._tileLayer = null;
-    this._dotNet = null;
+        let mapOptions = removeOptionDefaults(options);
+        mapOptions.maxBounds =
+            options.maxBounds && options.maxBounds.sq && options.maxBounds.ne
+                ? L.latLngBounds(options.maxBounds.sw, options.maxBounds.ne)
+                : undefined;
 
-    this.createTiles = function (config) {
-        const replace = my._tileLayer !== null;
+        let map = L.map(id, mapOptions);
 
-        let center = undefined;
-        let zoom = undefined;
+        map._dotNet = dotNet;
 
-        if (replace) {
-            zoom = my.getZoom();
-            center = my.getCenter();
-            my._tileLayer.remove(my._leaflet);
-        }
-
-        my._tileLayer = L.tileLayer(config.urlTemplate, {
-            id: config.id,
-            attribution: config.attribution,
-            minZoom: config.minZoom,
-            maxZoom: config.maxZoom,
-            tileSize: config.tileSize,
-            zoomOffset: config.zoomOffset
-        }).addTo(my._leaflet);
-
-        if (replace) {
-            my.setView(center, zoom);
-        }
-    };
-
-    this.fitWorld = function () {
-        my._leaflet.fitWorld();
-    };
-
-    this.setView = function (coord, zoom) {
-        my._leaflet.setView(coord, zoom);
-    };
-    this.setZoom = function (zoom) {
-        my._leaflet.setZoom(zoom);
-    };
-    this.panTo = function (coord) {
-        my._leaflet.panTo(coord);
-    };
-    this.flyTo = function (coord, zoom) {
-        my._leaflet.flyTo(coord, zoom);
-    };
-
-    this.getCenter = function () {
-        return my._leaflet.getCenter();
-    };
-    this.getZoom = function () {
-        return my._leaflet.getZoom();
-    };
-    this.getBounds = function () {
-        return my._leaflet.getBounds();
-    };
-
-    this.hookEvents = function () {
-        const map = my._leaflet;
-        const netMap = my._dotNet;
-
-        map.on('zoomstart', function (ev) {
-            var newZoomEv = { type: 'zoomstart', value: map.getZoom() };
-            netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
-        });
-
-        map.on('zoom', function (ev) {
-            var newZoomEv = { type: 'zoom', value: map.getZoom() };
-            netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
-        });
-
-        map.on('zoomend', function (ev) {
-            var newZoomEv = { type: 'zoomend', value: map.getZoom() };
-            netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
-        });
-
-        map.on('movestart', function (ev) {
-            var newCenter = { type: 'movestart', value: map.getCenter() };
-            netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
-        });
-
-        map.on('move', function (ev) {
-            var newCenter = { type: 'move', value: map.getCenter() };
-            netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
-        });
-
-        map.on('moveend', function (ev) {
-            var newCenter = { type: 'moveend', value: map.getCenter() };
-            netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
-        });
-
-        map.on('contextmenu', function (ev) {
-            var evt = {
-                type: 'contextmenu',
-                hanled: false,
-                latlng: ev.latlng,
-                layerPoint: ev.layerPoint,
-                containerPoint: ev.containerPoint
-            };
-            netMap.invokeMethodAsync('NotifyContextMenu', evt);
-        });
-    };
+        return map;
+    }
 };
 
-window.soamap.create = function (id, options, dotNet) {
-    let map = new soamap();
-    map._id = id;
-    map._dotNet = dotNet;
-    map._leaflet = L.map(id, options);
+L.Map.prototype.createTiles = function (config, dotNet) {
 
-    return map;
+    var tileConfig = removeOptionDefaults(config, [ "urlTemplate" ]);
+
+    var tileLayer = L.tileLayer(config.urlTemplate, tileConfig)
+        .addTo(this);
+
+    tileLayer._dotNet = dotNet;
+
+    return tileLayer;
+};
+
+L.Map.prototype.hookEvents = function () {
+    const map = this;
+    const netMap = map._dotNet;
+
+    map.on('zoomstart', function (ev) {
+        var newZoomEv = { type: 'zoomstart', value: map.getZoom() };
+        netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
+    });
+
+    map.on('zoom', function (ev) {
+        var newZoomEv = { type: 'zoom', value: map.getZoom() };
+        netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
+    });
+
+    map.on('zoomend', function (ev) {
+        var newZoomEv = { type: 'zoomend', value: map.getZoom() };
+        netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
+    });
+
+    map.on('movestart', function (ev) {
+        var newCenter = { type: 'movestart', value: map.getCenter() };
+        netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
+    });
+
+    map.on('move', function (ev) {
+        var newCenter = { type: 'move', value: map.getCenter() };
+        netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
+    });
+
+    map.on('moveend', function (ev) {
+        var newCenter = { type: 'moveend', value: map.getCenter() };
+        netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
+    });
+
+    map.on('contextmenu', function (ev) {
+        var evt = {
+            type: 'contextmenu',
+            hanled: false,
+            latlng: ev.latlng,
+            layerPoint: ev.layerPoint,
+            containerPoint: ev.containerPoint
+        };
+        netMap.invokeMethodAsync('NotifyContextMenu', evt);
+    });
+};
+
+function removeOptionDefaults(options, toRemove) {
+
+    if (!toRemove)
+        toRemove = [];
+
+    const copy = {};
+
+    for (let key in options) {
+        if (options[key] != null && !toRemove.includes(key)) {
+            copy[key] = options[key];
+        }
+    }
+
+    return copy;
 }
