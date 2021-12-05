@@ -1,14 +1,12 @@
-﻿using Microsoft.JSInterop;
-using Soatech.Blazor.Leaflet.Configuration;
-using Soatech.Blazor.Leaflet.Events;
-using Soatech.Blazor.Leaflet.Models;
-using System.Drawing;
-
-namespace Soatech.Blazor.Leaflet
+﻿namespace Soatech.Blazor.Leaflet
 {
+    using Soatech.Blazor.Leaflet.Configuration;
+    using Soatech.Blazor.Leaflet.Events;
+    using Soatech.Blazor.Leaflet.Models;
+    using System.Drawing;
+
     public partial class SoaMap : IAsyncDisposable
     {
-        private LatLng _contextCoordinates;
         private IJSObjectReference? _jsSoaMap;
 
         private async ValueTask InitializeJsMap()
@@ -135,36 +133,46 @@ namespace Soatech.Blazor.Leaflet
             return _jsSoaMap.InvokeAsync<IJSObjectReference?>("createTiles", config, DotNetObjectReference.Create(owner));
         }
 
-        public ValueTask HookEvents()
+        public ValueTask<IJSObjectReference?> CreateMarker(MarkerOptions options, Layers.Marker marker)
+        {
+            if (_jsSoaMap == null) throw new InvalidOperationException("Map not initialized.");
+            return _jsSoaMap.InvokeAsync<IJSObjectReference?>("createMarker", options, DotNetObjectReference.Create(marker));
+        }
+
+        public ValueTask<IJSObjectReference?> CreateGroupLayer(Layers.GroupLayer owner)
+        {
+            if (_jsSoaMap == null) throw new InvalidOperationException("Map not initialized.");
+            return _jsSoaMap.InvokeAsync<IJSObjectReference?>("createLayerGroup", DotNetObjectReference.Create(owner));
+        }
+
+        public ValueTask HookNativeEvents()
         {
             return _jsSoaMap?.InvokeVoidAsync("hookEvents") ?? ValueTask.CompletedTask;
         }
 
-        public async ValueTask DisposeAsync()
+        private async ValueTask DisposeInteropAsync()
         {
             if (_jsSoaMap != null)
             {
                 await _jsSoaMap.DisposeAsync();
                 _jsSoaMap = null;
             }
-            GC.SuppressFinalize(this);
         }
 
-        [JSInvokableAttribute]
+        [JSInvokable]
         public ValueTask NotifyContextMenu(MouseEvent e)
         {
-            _contextCoordinates = e.LatLng;
-            return ValueTask.CompletedTask;
+            return OnContextMenu?.Invoke(e) ?? ValueTask.CompletedTask;
         }
 
-        [JSInvokableAttribute]
+        [JSInvokable]
         public ValueTask NotifyZoomChanged(ValueEvent<float> e)
         {
             CurrentZoom = e.Value;
             return ValueTask.CompletedTask;
         }
 
-        [JSInvokableAttribute]
+        [JSInvokable]
         public ValueTask NotifyCenterChanged(ValueEvent<LatLng> e)
         {
             Center = e.Value ?? new();

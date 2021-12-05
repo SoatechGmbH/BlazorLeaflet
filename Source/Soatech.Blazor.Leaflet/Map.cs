@@ -61,7 +61,7 @@ namespace Soatech.Blazor.Leaflet
 
         public string Id { get; }
 
-        private ObservableCollection<Layer> _layers = new ObservableCollection<Layer>();
+        private ObservableCollection<Models.Layer> _layers = new ObservableCollection<Models.Layer>();
 
         private readonly IJSRuntime _jsRuntime;
 
@@ -90,7 +90,7 @@ namespace Soatech.Blazor.Leaflet
         /// <param name="layer">The layer to be added.</param>
         /// <exception cref="ArgumentNullException">Throws when the layer is null.</exception>
         /// <exception cref="UninitializedMapException">Throws when the map has not been yet initialized.</exception>
-        public void AddLayer(Layer layer)
+        public void AddLayer(Models.Layer layer)
         {
             if (layer is null)
             {
@@ -111,7 +111,7 @@ namespace Soatech.Blazor.Leaflet
         /// <param name="layer">The layer to be removed.</param>
         /// <exception cref="ArgumentNullException">Throws when the layer is null.</exception>
         /// <exception cref="UninitializedMapException">Throws when the map has not been yet initialized.</exception>
-        public void RemoveLayer(Layer layer)
+        public void RemoveLayer(Models.Layer layer)
         {
             if (layer is null)
             {
@@ -130,7 +130,7 @@ namespace Soatech.Blazor.Leaflet
         /// Get a read only collection of the current layers.
         /// </summary>
         /// <returns>A read only collection of layers.</returns>
-        public IReadOnlyCollection<Layer> GetLayers()
+        public IReadOnlyCollection<Models.Layer> GetLayers()
         {
             return _layers.ToList().AsReadOnly();
         }
@@ -141,7 +141,7 @@ namespace Soatech.Blazor.Leaflet
             {
                 foreach (var item in args.NewItems)
                 {
-                    var layer = item as Layer;
+                    var layer = item as Models.Layer;
                     LeafletInterops.AddLayer(_jsRuntime, Id, layer);
                 }
             }
@@ -149,7 +149,7 @@ namespace Soatech.Blazor.Leaflet
             {
                 foreach (var item in args.OldItems)
                 {
-                    if (item is Layer layer)
+                    if (item is Models.Layer layer)
                     {
                         LeafletInterops.RemoveLayer(_jsRuntime, Id, layer.Id);
                     }
@@ -159,11 +159,11 @@ namespace Soatech.Blazor.Leaflet
                      || args.Action == NotifyCollectionChangedAction.Move)
             {
                 foreach (var oldItem in args.OldItems)
-                    if (oldItem is Layer layer)
+                    if (oldItem is Models.Layer layer)
                         LeafletInterops.RemoveLayer(_jsRuntime, Id, layer.Id);
 
                 foreach (var newItem in args.NewItems)
-                    LeafletInterops.AddLayer(_jsRuntime, Id, newItem as Layer);
+                    LeafletInterops.AddLayer(_jsRuntime, Id, newItem as Models.Layer);
             }
         }
 

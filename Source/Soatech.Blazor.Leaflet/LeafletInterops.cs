@@ -22,7 +22,7 @@ namespace Soatech.Blazor.Leaflet
         public static ValueTask Create(IJSRuntime jsRuntime, Map map) =>
             jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.create", map, DotNetObjectReference.Create(map));
 
-        private static DotNetObjectReference<T> CreateLayerReference<T>(string mapId, T layer) where T : Layer
+        private static DotNetObjectReference<T> CreateLayerReference<T>(string mapId, T layer) where T : Models.Layer
         {
             var result = DotNetObjectReference.Create(layer);
             LayerReferences.TryAdd(layer.Id, (result, mapId, layer));
@@ -35,7 +35,7 @@ namespace Soatech.Blazor.Leaflet
                 value.Item1.Dispose();
         }
 
-        public static ValueTask AddLayer(IJSRuntime jsRuntime, string mapId, Layer layer)
+        public static ValueTask AddLayer(IJSRuntime jsRuntime, string mapId, Models.Layer layer)
         {
             return layer switch
             {
@@ -49,7 +49,7 @@ namespace Soatech.Blazor.Leaflet
                 Polyline polyline => jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.addPolyline", mapId, polyline, CreateLayerReference(mapId, polyline)),
                 ImageLayer image => jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.addImageLayer", mapId, image, CreateLayerReference(mapId, image)),
                 GeoJsonDataLayer geo => jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.addGeoJsonLayer", mapId, geo, CreateLayerReference(mapId, geo)),
-                _ => throw new NotImplementedException($"The layer {typeof(Layer).Name} has not been implemented."),
+                _ => throw new NotImplementedException($"The layer {typeof(Models.Layer).Name} has not been implemented."),
             };
         }
 
@@ -59,20 +59,20 @@ namespace Soatech.Blazor.Leaflet
             DisposeLayerReference(layerId);
         }
 
-        public static ValueTask UpdatePopupContent(IJSRuntime jsRuntime, string mapId, Layer layer) =>
+        public static ValueTask UpdatePopupContent(IJSRuntime jsRuntime, string mapId, Models.Layer layer) =>
             jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.updatePopupContent", mapId, layer.Id, layer.Popup?.Content);
 
-        public static ValueTask UpdateTooltipContent(IJSRuntime jsRuntime, string mapId, Layer layer) =>
+        public static ValueTask UpdateTooltipContent(IJSRuntime jsRuntime, string mapId, Models.Layer layer) =>
             jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.updateTooltipContent", mapId, layer.Id, layer.Tooltip?.Content);
 
-        public static ValueTask UpdateShape(IJSRuntime jsRuntime, string mapId, Layer layer) =>
+        public static ValueTask UpdateShape(IJSRuntime jsRuntime, string mapId, Models.Layer layer) =>
             layer switch
             {
                 Rectangle rectangle => jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.updateRectangle", mapId, rectangle),
                 Circle circle => jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.updateCircle", mapId, circle),
                 Polygon polygon => jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.updatePolygon", mapId, polygon),
                 Polyline polyline => jsRuntime.InvokeVoidAsync($"{_BaseObjectContainer}.updatePolyline", mapId, polyline),
-                _ => throw new NotImplementedException($"The layer {typeof(Layer).Name} has not been implemented."),
+                _ => throw new NotImplementedException($"The layer {typeof(Models.Layer).Name} has not been implemented."),
             };
 
         public static ValueTask FitBounds(IJSRuntime jsRuntime, string mapId, PointF corner1, PointF corner2, PointF? padding, float? maxZoom) =>

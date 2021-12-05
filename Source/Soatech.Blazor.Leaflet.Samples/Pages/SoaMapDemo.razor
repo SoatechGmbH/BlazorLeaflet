@@ -19,6 +19,11 @@
     ShowAttributionControl="false">
     <Layers>
         <TileLayer @bind-TileSourceTemplate="ViewModel.TileLayer"></TileLayer>
+        <Marker @bind-Position="ViewModel.MarkerPosition" Draggable="true"></Marker>
+        @foreach (var marker in ViewModel.Markers)
+        {
+            <Marker @bind-Position="marker.Position" Draggable="marker.IsDraggable" RiseOnHover="marker.IsDraggable" Opacity="marker.Opacity"></Marker>
+        }
     </Layers>
 </SoaMap>
 
@@ -31,4 +36,9 @@
     <div>Min-Zoom: <input @bind-value="ViewModel.MinZoom" /></div>
     <div>Max-Zoom: <input @bind-value="ViewModel.MaxZoom" /></div>
     <div>Current Zoom: <input @bind-value="ViewModel.Zoom" /></div>
+
+    <h3>Marker Position:</h3>
+    <div>Lat: <input @bind-value="ViewModel.MarkerPositionLat" /></div>
+    <div>Lng: <input @bind-value="ViewModel.MarkerPositionLng" /></div>
+
 </div>

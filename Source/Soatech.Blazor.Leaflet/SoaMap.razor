@@ -1,9 +1,7 @@
-﻿@using Microsoft.JSInterop
-@inject IJSRuntime _jsRuntime
+﻿@inject IJSRuntime _jsRuntime
 
 <div id="@Id" class="@_cssStyle"></div>
 
-<button onclick="@(() => OnButtonClicked())">Show World</button>
-<CascadingValue Value="this">
-@this.Layers
+<CascadingValue IsFixed="true" Name="ParentMap" Value="this">
+    @Layers
 </CascadingValue>

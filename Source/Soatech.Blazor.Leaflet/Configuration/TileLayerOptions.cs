@@ -12,8 +12,8 @@
 
         public float MaxZoom { get; set; } = 20;
 
-        public ushort TileSize { get; set; } = 128;
+        public ushort TileSize { get; set; } = 512;
 
-        public int ZoomOffset { get; set; } = 0;
+        public int ZoomOffset { get; set; } = -2;
     }
 }

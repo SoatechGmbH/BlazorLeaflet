@@ -18,9 +18,9 @@
 
 L.Map.prototype.createTiles = function (config, dotNet) {
 
-    var tileConfig = removeOptionDefaults(config, [ "urlTemplate" ]);
+    let tileConfig = removeOptionDefaults(config, [ "urlTemplate" ]);
 
-    var tileLayer = L.tileLayer(config.urlTemplate, tileConfig)
+    let tileLayer = L.tileLayer(config.urlTemplate, tileConfig)
         .addTo(this);
 
     tileLayer._dotNet = dotNet;
@@ -28,42 +28,64 @@ L.Map.prototype.createTiles = function (config, dotNet) {
     return tileLayer;
 };
 
+L.Map.prototype.createMarker = function (config, dotNet) {
+
+    let markerConfig = removeOptionDefaults(config);
+
+    var markerLayer = L.marker(config.position, markerConfig);
+    hookInteractiveEvents(markerLayer, dotNet);
+    hookMarkerEvents(markerLayer, dotNet);
+    markerLayer.addTo(this);
+
+    markerLayer._dotNet = dotNet;
+
+    return markerLayer;
+};
+
+L.Map.prototype.createLayerGroup = function (dotNet) {
+    let groupLayer = L.layerGroup().addTo(this);
+
+    groupLayer._dotNet = dotNet;
+
+    return groupLayer;
+}
+
 L.Map.prototype.hookEvents = function () {
     const map = this;
     const netMap = map._dotNet;
 
     map.on('zoomstart', function (ev) {
-        var newZoomEv = { type: 'zoomstart', value: map.getZoom() };
+        let newZoomEv = { type: 'zoomstart', value: map.getZoom() };
         netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
     });
 
     map.on('zoom', function (ev) {
-        var newZoomEv = { type: 'zoom', value: map.getZoom() };
+        let newZoomEv = { type: 'zoom', value: map.getZoom() };
         netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
     });
 
     map.on('zoomend', function (ev) {
-        var newZoomEv = { type: 'zoomend', value: map.getZoom() };
+        let newZoomEv = { type: 'zoomend', value: map.getZoom() };
         netMap.invokeMethodAsync('NotifyZoomChanged', newZoomEv);
     });
 
     map.on('movestart', function (ev) {
-        var newCenter = { type: 'movestart', value: map.getCenter() };
+        let newCenter = { type: 'movestart', value: map.getCenter() };
         netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
     });
 
     map.on('move', function (ev) {
-        var newCenter = { type: 'move', value: map.getCenter() };
+        let newCenter = { type: 'move', value: map.getCenter() };
         netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
     });
 
     map.on('moveend', function (ev) {
-        var newCenter = { type: 'moveend', value: map.getCenter() };
+        let newCenter = { type: 'moveend', value: map.getCenter() };
         netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
     });
 
     map.on('contextmenu', function (ev) {
-        var evt = {
+        let evt = {
             type: 'contextmenu',
             hanled: false,
             latlng: ev.latlng,
@@ -73,6 +95,86 @@ L.Map.prototype.hookEvents = function () {
         netMap.invokeMethodAsync('NotifyContextMenu', evt);
     });
 };
+
+
+function hookInteractiveEvents(layer, dotNet) {
+    layer.on('click', function (ev) {
+        let evt = cleanupEventArgsForSerialization(ev);
+        dotNet.invokeMethodAsync("NotifyClickEvent", evt);
+    });
+
+    layer.on('dblclick', function (ev) {
+        let evt = cleanupEventArgsForSerialization(ev);
+        dotNet.invokeMethodAsync("NotifyDblClickEvent", evt);
+    });
+
+    layer.on('mousedown', function (ev) {
+        let evt = cleanupEventArgsForSerialization(ev);
+        dotNet.invokeMethodAsync("NotifyMouseDownEvent", evt);
+    });
+
+    layer.on('mouseup', function (ev) {
+        let evt = cleanupEventArgsForSerialization(ev);
+        dotNet.invokeMethodAsync("NotifyMouseUpEvent", evt);
+    });
+
+    layer.on('mouseover', function (ev) {
+        let evt = cleanupEventArgsForSerialization(ev);
+        dotNet.invokeMethodAsync("NotifyMouseOverEvent", evt);
+    });
+
+    layer.on('mouseout', function (ev) {
+        let evt = cleanupEventArgsForSerialization(ev);
+        dotNet.invokeMethodAsync("NotifyMouseOutEvent", evt);
+    });
+
+    layer.on('contextmenu', function (ev) {
+        let evt = cleanupEventArgsForSerialization(ev);
+        dotNet.invokeMethodAsync("NotifyContextMenuEvent", evt);
+    });
+}
+
+function hookMarkerEvents(layer, dotNet) {
+
+    layer.on('movestart', function (ev) {
+        let evt = { type: 'movestart', value: layer.getLatLng() };
+        dotNet.invokeMethodAsync("NotifyPositionChanged", evt);
+    });
+
+    layer.on('move', function (ev) {
+        let evt = { type: 'movestart', value: layer.getLatLng() };
+        dotNet.invokeMethodAsync("NotifyPositionChanged", evt);
+    });
+
+    layer.on('moveend', function (ev) {
+        let evt = { type: 'movestart', value: layer.getLatLng() };
+        dotNet.invokeMethodAsync("NotifyPositionChanged", evt);
+    });
+
+}
+
+function cleanupEventArgsForSerialization(eventArgs) {
+
+    const propertiesToRemove = [
+        "target",
+        "sourceTarget",
+        "propagatedFrom",
+        "originalEvent",
+        "tooltip",
+        "popup"
+    ];
+
+    const copy = {};
+
+    for (let key in eventArgs) {
+        if (!propertiesToRemove.includes(key) && eventArgs.hasOwnProperty(key)) {
+            copy[key] = eventArgs[key];
+        }
+    }
+
+    return copy;
+}
+
 
 function removeOptionDefaults(options, toRemove) {
 

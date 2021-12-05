@@ -28,4 +28,9 @@
 	<Compile Update="SoaMap.razor.interop.cs" DependentUpon="SoaMap.razor" />
   </ItemGroup>
 
+	<ItemGroup>
+		<Compile Update="Layers/GroupLayer.cs" DependentUpon="Layers/GroupLayer.razor" />
+		<Compile Update="Layers/GroupLayer.interop.cs" DependentUpon="Layers/GroupLayer.razor" />
+	</ItemGroup>
+
 </Project>

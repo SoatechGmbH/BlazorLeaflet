@@ -1,30 +1,27 @@
-﻿global using System;
-global using System.Threading.Tasks;
-global using Microsoft.AspNetCore.Components;
-using Soatech.Blazor.Leaflet.Configuration;
-using Soatech.Blazor.Leaflet.Events;
-using Soatech.Blazor.Leaflet.Models;
-using System.ComponentModel;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
-using System.Collections.ObjectModel;
-
-namespace Soatech.Blazor.Leaflet
+﻿namespace Soatech.Blazor.Leaflet
 {
-    public partial class SoaMap : ComponentBase, INotifyPropertyChanged, IDisposable
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
+    using Soatech.Blazor.Leaflet.Events;
+    using Soatech.Blazor.Leaflet.Models;
+
+    using Layer = Layers.Layer;
+
+    public partial class SoaMap : INotifyPropertyChanged, IAsyncDisposable
     {
         #region Variables
 
         private readonly string _cssStyle = "soamap";
-        private readonly CompositeDisposable _disposables = new();
-        private readonly ObservableCollection<LayerComponent> _layers = new();
+        private readonly CompositeAsyncDisposable _asyncDisposables = new();
+        private readonly ObservableCollection<Layer> _layers = new();
 
+        private string _id = $"{Guid.NewGuid()}";
         private float _minZoom = 2;
         private float _maxZoom = 10;
         private float _zoom = 8;
         private LatLng _center = new(0, 0);
         private (LatLng sw, LatLng ne)? _maxBounds;
+        private (LatLng sw, LatLng ne)? _bounds;
 
         #endregion
 
@@ -33,7 +30,11 @@ namespace Soatech.Blazor.Leaflet
         #region Parameters
 
         [Parameter]
-        public string Id { get; set; } = $"{Guid.NewGuid()}";
+        public string Id
+        {
+            get => _id;
+            set => _id = value;
+        }
 
         [Parameter]
         public bool ShowZoomControl { get; set; } = true;
@@ -48,7 +49,7 @@ namespace Soatech.Blazor.Leaflet
         public Action<bool>? ShowAttributionControlChanged { get; set; }
 
         [Parameter]
-        public float MinZoom 
+        public float MinZoom
         {
             get => _minZoom;
             set
@@ -92,7 +93,7 @@ namespace Soatech.Blazor.Leaflet
         public Action<float>? MaxZoomChanged { get; set; }
 
         [Parameter]
-        public float CurrentZoom 
+        public float CurrentZoom
         {
             get => _zoom;
             set
@@ -113,7 +114,7 @@ namespace Soatech.Blazor.Leaflet
         public Action<float>? CurrentZoomChanged { get; set; }
 
         [Parameter]
-        public LatLng Center 
+        public LatLng Center
         {
             get => _center;
             set
@@ -145,47 +146,14 @@ namespace Soatech.Blazor.Leaflet
         public Action<(LatLng sw, LatLng ne)?>? MaxBoundsChanged { get; set; }
 
         [Parameter]
-        public Func<MouseEvent, ValueTask>? OnConextMenu { get; set; }
+        public Func<MouseEvent, ValueTask>? OnContextMenu { get; set; }
 
         [Parameter]
         public RenderFragment Layers { get; set; }
 
         #endregion
 
-        public ObservableCollection<LayerComponent> MapLayers => _layers;
-
-        protected override void OnInitialized()
-        {
-            _disposables.Add(this.WhenChanged(nameof(Center))
-                .Select(_ => Center)
-                .Subscribe(c => CenterChanged?.Invoke(c)));
-
-            _disposables.Add(this.WhenChanged(nameof(MinZoom))
-                .Select(_ => MinZoom)
-                .Subscribe(mz => MinZoomChanged?.Invoke(mz)));
-            
-            _disposables.Add(this.WhenChanged(nameof(MaxZoom))
-                .Select(_ => MaxZoom)
-                .Subscribe(mz => MaxZoomChanged?.Invoke(mz)));
-            
-            _disposables.Add(this.WhenChanged(nameof(CurrentZoom))
-                .Select(_ => CurrentZoom)
-                .Subscribe(cz => CurrentZoomChanged?.Invoke(cz)));
-            
-            _disposables.Add(this.WhenChanged(nameof(ShowZoomControl))
-                .Select(_ => ShowZoomControl)
-                .Subscribe(sz => ShowZoomControlChanged?.Invoke(sz)));
-            
-            _disposables.Add(this.WhenChanged(nameof(ShowAttributionControl))
-                .Select(_ => ShowAttributionControl)
-                .Subscribe(ac => ShowAttributionControlChanged?.Invoke(ac)));
-
-            _disposables.Add(this.WhenChanged(nameof(MaxBounds))
-                .Select(_ => MaxBounds)
-                .Subscribe(mb => MaxBoundsChanged?.Invoke(mb)));
-
-            base.OnInitialized();
-        }
+        public ObservableCollection<Layer> MapLayers => _layers;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -193,45 +161,87 @@ namespace Soatech.Blazor.Leaflet
             {
                 await InitializeJsMap();
 
-                _disposables.Add(this.WhenChanged(nameof(Center))
+                HookParameterChanged();
+
+                _asyncDisposables.Add(this.WhenChanged(nameof(Center))
                     .Merge(this.WhenChanged(nameof(CurrentZoom)))
                     .Merge(this.WhenChanged(nameof(MinZoom)))
                     .Merge(this.WhenChanged(nameof(MaxZoom)))
                     .Throttle(TimeSpan.FromMilliseconds(100))
-                    .SelectMany(_ => 
+                    .SelectMany(_ =>
                         FlyTo(Center, CurrentZoom)
                         .AsTask()
                         .ToObservable()
                     )
                     .Subscribe());
 
-
-                foreach (var layer in MapLayers)
-                    await layer.CreateNativeComponent();
-
-                _disposables.Add(this.WhenChanged(nameof(MaxBounds))
+                _asyncDisposables.Add(this.WhenChanged(nameof(MaxBounds))
                     .Throttle(TimeSpan.FromMilliseconds(100))
                     .SelectMany(_ => FlyTo(Center, CurrentZoom).AsTask().ToObservable())
                     .Subscribe());
 
                 await SetView(Center, CurrentZoom);
-                await HookEvents();
+                await HookNativeEvents();
+
+                _asyncDisposables.Add(
+                    _layers.WhenCollectionChanged()
+                    .Where(e => e.Action != NotifyCollectionChangedAction.Move)
+                    .StartWith(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems: MapLayers, oldItems: new List<Layer>()))
+                    .Select(e =>
+                    (
+                        OldItems: e.OldItems?.Cast<Layer>() ?? Enumerable.Empty<Layer>(),
+                        NewItems: e.NewItems?.Cast<Layer>() ?? Enumerable.Empty<Layer>()
+                    ))
+                    .SelectMany(e =>
+                        Task.WhenAll(
+                            e.OldItems.Select(itm => itm.DisposeAsync().AsTask()))
+                        .ToObservable()
+                        .Select(_ => e))
+                    .SelectMany(e =>
+                        Task.WhenAll(
+                            e.NewItems.Select(itm => itm.Create().AsTask()))
+                        .ToObservable())
+                    .Subscribe());
             }
 
             await base.OnAfterRenderAsync(firstRender);
         }
 
-        private async void OnButtonClicked()
+        private void HookParameterChanged()
         {
-            await FitWorld();
+            _asyncDisposables.Add(this.WhenChanged(nameof(Center))
+                .Select(_ => Center)
+                .Subscribe(c => CenterChanged?.Invoke(c)));
+
+            _asyncDisposables.Add(this.WhenChanged(nameof(MinZoom))
+                .Select(_ => MinZoom)
+                .Subscribe(mz => MinZoomChanged?.Invoke(mz)));
+
+            _asyncDisposables.Add(this.WhenChanged(nameof(MaxZoom))
+                .Select(_ => MaxZoom)
+                .Subscribe(mz => MaxZoomChanged?.Invoke(mz)));
+
+            _asyncDisposables.Add(this.WhenChanged(nameof(CurrentZoom))
+                .Select(_ => CurrentZoom)
+                .Subscribe(cz => CurrentZoomChanged?.Invoke(cz)));
+
+            _asyncDisposables.Add(this.WhenChanged(nameof(ShowZoomControl))
+                .Select(_ => ShowZoomControl)
+                .Subscribe(sz => ShowZoomControlChanged?.Invoke(sz)));
+
+            _asyncDisposables.Add(this.WhenChanged(nameof(ShowAttributionControl))
+                .Select(_ => ShowAttributionControl)
+                .Subscribe(ac => ShowAttributionControlChanged?.Invoke(ac)));
+
+            _asyncDisposables.Add(this.WhenChanged(nameof(MaxBounds))
+                .Select(_ => MaxBounds)
+                .Subscribe(mb => MaxBoundsChanged?.Invoke(mb)));
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            foreach (var layer in MapLayers)
-                layer?.Dispose();
-
-            _disposables?.Dispose();
+            await _asyncDisposables.DisposeAsync();
+            await DisposeInteropAsync();
             GC.SuppressFinalize(this);
         }
     }

@@ -183,7 +183,7 @@ namespace Soatech.Blazor.Leaflet.Samples.Data
             AddOrUpdateShape(_polygon);
         }
 
-        void AddOrUpdateShape(Layer shape)
+        void AddOrUpdateShape(Models.Layer shape)
         {
             if (_map.GetLayers().Contains(shape))
             {

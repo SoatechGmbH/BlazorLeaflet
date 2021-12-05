@@ -1,12 +1,6 @@
 ﻿namespace Soatech.Blazor.Leaflet.Layers
 {
-    using Microsoft.JSInterop;
     using Soatech.Blazor.Leaflet.Configuration;
-    using System;
-    using System.Linq;
-    using System.Reactive.Linq;
-    using System.Reactive.Threading.Tasks;
-    using System.Threading.Tasks;
 
     public partial class TileLayer : GridLayer
     {
@@ -29,7 +23,18 @@
         [Parameter]
         public Action<string>? TileSourceTemplateChanged { get; set; }
 
-        protected override async ValueTask OnCreateNativeComponent()
+        protected override void OnInitialized()
+        {
+            AsyncDisposables.Add(this.WhenChanged(nameof(TileSourceTemplate))
+                .Throttle(TimeSpan.FromMilliseconds(300))
+                .Select(_ => TileSourceTemplate)
+                .SelectMany(t => SetUrl(t).AsTask().ToObservable())
+                .Subscribe());
+
+            base.OnInitialized();
+        }
+
+        protected override ValueTask<IJSObjectReference?> CreateNative()
         {
             var config = new TileLayerOptions()
             {
@@ -39,13 +44,7 @@
                 Attribution = "Map data &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors, Imagery © <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a>"
             };
 
-            _nativeLayer = await Parent.CreateTileLayer(config, this);
-
-            Disposables.Add(this.WhenChanged(nameof(TileSourceTemplate))
-                .Throttle(TimeSpan.FromMilliseconds(300))
-                .Select(_ => TileSourceTemplate)
-                .SelectMany(t => SetUrl(t).AsTask().ToObservable())
-                .Subscribe());
+            return ParentMap.CreateTileLayer(config, this);
         }
     }
 }

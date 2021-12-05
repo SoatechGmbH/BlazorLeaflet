@@ -1,6 +1,6 @@
 ﻿namespace Soatech.Blazor.Leaflet.Layers
 {
-    public abstract class GridLayer : Layer
+    public partial class GroupLayer
     {
     }
 }
