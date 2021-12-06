@@ -1,6 +1,6 @@
 ﻿@page "/soamapdemo"
 @using System.Reactive.Linq
-@using System.Reactive
+topSystem.Reactive
 @using ReactiveUI.Blazor
 @using Soatech.Blazor.Leaflet
 @using Soatech.Blazor.Leaflet.Layers
@@ -14,18 +14,18 @@
     @bind-MinZoom="ViewModel.MinZoom" 
     @bind-MaxZoom="ViewModel.MaxZoom" 
     @bind-CurrentZoom="ViewModel.Zoom" 
-    @bind-Center="ViewModel.Center"
+    @bind-Center="ViewModel.Center.Value"
     ShowZoomControl="false" 
     ShowAttributionControl="false">
     <Layers>
         <TileLayer @bind-TileSourceTemplate="ViewModel.TileLayer"></TileLayer>
-        <Marker @bind-Position="ViewModel.MarkerPosition" Draggable="true"></Marker>
+        <Marker @bind-Position="ViewModel.MarkerPosition.Value" Draggable="true"></Marker>
         @foreach (var layer in ViewModel.Layers)
         {
             <LayerGroup Name="layer.Name" IsVisible="layer.IsVisible">
                 @foreach (var marker in layer.Markers)
                 {
-                    <Marker @bind-Position="marker.Position" Draggable="marker.IsDraggable" RiseOnHover="marker.IsDraggable" Opacity="marker.Opacity"></Marker>
+                    <Marker @bind-Position="marker.Position.Value" Draggable="marker.IsDraggable" RiseOnHover="marker.IsDraggable" Opacity="marker.Opacity" OnClick="@(_ => OnMarkerClicked(marker))" ></Marker>
                 }
             </LayerGroup>
         }
@@ -33,22 +33,35 @@
 </SoaMap>
 
 <div>
-    <h3>Center</h3>
-    <div>Lat: <input @bind-value="ViewModel.CenterLat" /></div>
-    <div>Lng: <input @bind-value="ViewModel.CenterLng" /></div>
-    
-    <h3>Zoom</h3>
-    <div>Min-Zoom: <input @bind-value="ViewModel.MinZoom" /></div>
-    <div>Max-Zoom: <input @bind-value="ViewModel.MaxZoom" /></div>
-    <div>Current Zoom: <input @bind-value="ViewModel.Zoom" /></div>
+    <div style="margin-top: 20px; margin-bottom: 10px;">
+        <h3>Center</h3>
+        <div>Lat: <input @bind-value="ViewModel.Center.Lat" /></div>
+        <div>Lng: <input @bind-value="ViewModel.Center.Lng" /></div>
+    </div>
 
-    <h3>Marker Position:</h3>
-    <div>Lat: <input @bind-value="ViewModel.MarkerPositionLat" /></div>
-    <div>Lng: <input @bind-value="ViewModel.MarkerPositionLng" /></div>
+    <div style="margin-top: 15px; margin-bottom: 10px;">
+        <h3>Zoom</h3>
+        <div>Min-Zoom: <input @bind-value="ViewModel.MinZoom" /></div>
+        <div>Max-Zoom: <input @bind-value="ViewModel.MaxZoom" /></div>
+        <div>Current Zoom: <input @bind-value="ViewModel.Zoom" /></div>
+    </div>
 
-    <h3>Layers:</h3>
-    @foreach (var layer in ViewModel.Layers)
+    @if (ViewModel.SelectedMarkers.Count > 0)
     {
-        <div><input type="checkbox" checked="@layer.IsVisible" @bind-value="layer.IsVisible"  /><span>Show @layer.Name</span></div>
+        <div style="margin-top: 15px; margin-bottom: 10px;">
+            <h3>Selected Marker Positions:</h3>
+            @foreach (var selectedMarker in ViewModel.SelectedMarkers)
+            {
+                <div><span>@selectedMarker.Name => Lat: <input @bind-value="selectedMarker.Position.Lat" />  Lng: <input @bind-value="selectedMarker.Position.Lng" /></span></div>
+            }
+        </div>
     }
+    
+    <div style="margin-top: 15px; margin-bottom: 10px;">
+        <h3>Layers:</h3>
+        @foreach (var layer in ViewModel.Layers)
+        {
+            <div><input type="checkbox" checked="@layer.IsVisible" @bind-value="layer.IsVisible"  /><span>Show @layer.Name</span></div>
+        }
+    </div>
 </div>

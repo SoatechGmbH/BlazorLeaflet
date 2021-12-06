@@ -1,4 +1,5 @@
-﻿using System.Reactive;
+﻿using Soatech.Blazor.Leaflet.Samples.ViewModels;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace Soatech.Blazor.Leaflet.Samples.Pages
                         .Subscribe(_ =>
                         {
                             ViewModel.TileLayer = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-                            ViewModel.MarkerPosition = new() { Lat = 53.57532f, Lng = 10.01534f };
+                            ViewModel.MarkerPosition.Value = new() { Lat = 53.57532f, Lng = 10.01534f };
                             //ViewModel.Center = new();
                             //ViewModel.MinZoom = 8;
                             //ViewModel.MaxZoom = 7;
@@ -42,6 +43,13 @@ namespace Soatech.Blazor.Leaflet.Samples.Pages
                 });
 
             return base.OnInitializedAsync();
+        }
+
+        private ValueTask OnMarkerClicked(MarkerViewModel viewModel)
+        {
+            ViewModel.SelectMarker(viewModel);
+            StateHasChanged();
+            return ValueTask.CompletedTask;
         }
     }
 }

@@ -8,17 +8,20 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
     public class SoaMapDemoViewModel : ReactiveObject, IAsyncDisposable
     {
         private CompositeAsyncDisposable _disposables = new();
-        private LatLng _center = new LatLng(0, 10);
-        private LatLng _markerPosition = new LatLng(10, 10);
+        private LatLngViewModel _center = new(new LatLng(0, 10));
+        private LatLngViewModel _markerPosition = new(new LatLng(10, 10));
         private float _zoom = 4.0f;
         private float _minZoom = 2.0f;
         private float _maxZoom = 20.0f;
         private string _tileLayer = "https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png";
         private ObservableCollection<LayerViewModel> _layers = new();
+        private ObservableCollection<MarkerViewModel> _selectedMarkers = new();
         private Random _random = new Random((int)DateTime.Now.Ticks);
 
         public SoaMapDemoViewModel()
         {
+            _disposables.Add(Center.WhenChanged().Subscribe(_ => this.RaisePropertyChanged(nameof(Center))));
+
             for (int i = 0; i < 5; i++)
             {
                 var layer = new LayerViewModel
@@ -27,60 +30,35 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
                     IsVisible = i == 0 ? true : false
                 };
 
+                _disposables.Add(layer.WhenChanged().Subscribe(_ => this.RaisePropertyChanged(nameof(Layers))));
+
                 for (int m = 0; m < 100; m++)
                 {
                     var marker = new MarkerViewModel
                     {
-                        Position = new((_random.NextSingle() * 180) - 90, (_random.NextSingle() * 360) - 180),
-                        Opacity = _random.NextSingle()
+                        Position = new(new((_random.NextSingle() * 180) - 90, (_random.NextSingle() * 360) - 180)),
+                        Opacity = _random.NextSingle(),
+                        Name = $"{layer.Name} - Marker {m}"
                     };
                     marker.IsDraggable = marker.Opacity > 0.5f;
-
-                    layer.Markers.Add(marker);
+                    
+                    layer.AddMarker(marker);
                 }
 
                 Layers.Add(layer);
             }
         }
 
-        public LatLng Center
+        public LatLngViewModel Center
         {
             get => _center;
             set => this.RaiseAndSetIfChanged(ref _center, value);
         }
 
-        public LatLng MarkerPosition
+        public LatLngViewModel MarkerPosition
         {
             get => _markerPosition;
             set => this.RaiseAndSetIfChanged(ref _markerPosition, value);
-        }
-
-        public float MarkerPositionLat
-        {
-            get => _markerPosition.Lat;
-            set
-            {
-                if (_markerPosition.Lat == value) return;
-
-                var position = new LatLng(value, _markerPosition.Lng);
-                _markerPosition = position;
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(MarkerPosition));
-            }
-        }
-
-        public float MarkerPositionLng
-        {
-            get => _markerPosition.Lng;
-            set
-            {
-                if (_markerPosition.Lng == value) return;
-
-                var position = new LatLng(_markerPosition.Lat, value);
-                _markerPosition = position;
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(MarkerPosition));
-            }
         }
 
         public ObservableCollection<LayerViewModel> Layers
@@ -89,32 +67,10 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
             set => this.RaiseAndSetIfChanged(ref _layers, value);
         }
 
-        public float CenterLat
+        public ObservableCollection<MarkerViewModel> SelectedMarkers
         {
-            get => _center.Lat;
-            set
-            {
-                if (_center.Lat == value) return;
-
-                var center = new LatLng(value, _center.Lng);
-                _center = center;
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(Center));
-            }
-        }
-
-        public float CenterLng
-        {
-            get => _center.Lng;
-            set
-            {
-                if (_center.Lng == value) return;
-
-                var center = new LatLng(_center.Lat, value);
-                _center = center;
-                this.RaisePropertyChanged();
-                this.RaisePropertyChanged(nameof(Center));
-            }
+            get => _selectedMarkers;
+            set => this.RaiseAndSetIfChanged(ref _selectedMarkers, value);
         }
 
         public float MinZoom
@@ -138,6 +94,14 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
         {
             get => _tileLayer;
             set => this.RaiseAndSetIfChanged(ref _tileLayer, value);
+        }
+
+        public void SelectMarker(MarkerViewModel marker)
+        {
+            if (SelectedMarkers.Contains(marker))
+                SelectedMarkers.Remove(marker);
+            else
+                SelectedMarkers.Add(marker);
         }
 
         public ValueTask DisposeAsync()

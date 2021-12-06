@@ -28,6 +28,12 @@
             set => this.RaiseAndSetIfChanged(ref _markers, value);
         }
 
+        public void AddMarker(MarkerViewModel marker)
+        {
+            Markers.Add(marker);
+            marker.PropertyChanged += (o, e ) => this.RaisePropertyChanged(nameof(Markers));
+        }
+
         public ValueTask DisposeAsync()
         {
             return ValueTask.CompletedTask;

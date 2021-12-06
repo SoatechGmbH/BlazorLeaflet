@@ -2,12 +2,14 @@
 {
     using ReactiveUI;
     using Soatech.Blazor.Leaflet.Models;
+    using System.ComponentModel;
     using System.Threading.Tasks;
 
     public class MarkerViewModel : ReactiveObject, IAsyncDisposable
     {
         private string _id = Guid.NewGuid().ToString();
-        private LatLng _position = new(0, 0);
+        private string _name = "";
+        private LatLngViewModel _position = new(new(0, 0));
         private bool _isDraggable = true;
         private float _opacity = 1.0f;
 
@@ -17,10 +19,18 @@
             set => _id = value;
         }
 
-        public LatLng Position
+        public LatLngViewModel Position
         {
             get => _position;
-            set => this.RaiseAndSetIfChanged(ref _position, value);
+            set
+            {
+                if (_position?.Value == value?.Value) return;
+                if (_position != null)
+                    _position.PropertyChanged -= RaisePositionChanged;
+                _position = value;
+                _position.PropertyChanged += RaisePositionChanged;
+                this.RaisePropertyChanged();
+            }
         }
 
         public bool IsDraggable
@@ -33,6 +43,17 @@
         {
             get => _opacity;
             set => this.RaiseAndSetIfChanged(ref _opacity, value);
+        }
+
+        public string Name
+        {
+            get => _name;
+            set => this.RaiseAndSetIfChanged(ref _name, value);
+        }
+
+        private void RaisePositionChanged(object sender, PropertyChangedEventArgs e)
+        {
+            this.RaisePropertyChanged(nameof(Position));
         }
 
         public ValueTask DisposeAsync()
