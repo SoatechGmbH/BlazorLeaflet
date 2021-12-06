@@ -242,6 +242,10 @@
                             _onInitialized?.Invoke(_isInitialized);
                         }
                     }));
+
+                _asyncDisposables.Add(
+                    this.OnInitialized
+                    .Subscribe(_ => this.PropertyChanged?.Invoke(this, new(nameof(Center)))));
             }
 
             await base.OnAfterRenderAsync(firstRender);
