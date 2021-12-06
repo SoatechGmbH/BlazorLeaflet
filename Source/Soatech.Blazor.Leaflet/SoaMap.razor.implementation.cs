@@ -20,8 +20,8 @@
         private float _maxZoom = 10;
         private float _zoom = 8;
         private LatLng _center = new(0, 0);
-        private (LatLng sw, LatLng ne)? _maxBounds;
-        private (LatLng sw, LatLng ne)? _bounds;
+        private LatLngBounds? _maxBounds;
+        private LatLngBounds? _bounds;
         private bool _isInitialized;
         private event Action<bool> _onInitialized;
 
@@ -132,7 +132,7 @@
         public Action<LatLng>? CenterChanged { get; set; }
 
         [Parameter]
-        public (LatLng sw, LatLng ne)? MaxBounds
+        public LatLngBounds? MaxBounds
         {
             get => _maxBounds;
             set
@@ -145,7 +145,23 @@
         }
 
         [Parameter]
-        public Action<(LatLng sw, LatLng ne)?>? MaxBoundsChanged { get; set; }
+        public Action<LatLngBounds?>? MaxBoundsChanged { get; set; }
+
+        [Parameter]
+        public LatLngBounds? Bounds
+        {
+            get => _bounds;
+            set
+            {
+                if (_bounds == value) return;
+
+                _bounds = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Bounds)));
+            }
+        }
+
+        [Parameter]
+        public Action<LatLngBounds?>? BoundsChanged { get; set; }
 
         [Parameter]
         public Func<MouseEvent, ValueTask>? OnContextMenu { get; set; }
@@ -181,6 +197,7 @@
                     .Merge(this.WhenChanged(nameof(CurrentZoom)))
                     .Merge(this.WhenChanged(nameof(MinZoom)))
                     .Merge(this.WhenChanged(nameof(MaxZoom)))
+                    .Merge(this.WhenChanged(nameof(Bounds)))
                     .Throttle(TimeSpan.FromMilliseconds(100))
                     .SelectMany(_ =>
                         FlyTo(Center, CurrentZoom)
@@ -259,6 +276,10 @@
             _asyncDisposables.Add(this.WhenChanged(nameof(MaxBounds))
                 .Select(_ => MaxBounds)
                 .Subscribe(mb => MaxBoundsChanged?.Invoke(mb)));
+
+            _asyncDisposables.Add(this.WhenChanged(nameof(Bounds))
+                .Select(_ => Bounds)
+                .Subscribe(b => BoundsChanged?.Invoke(b)));
         }
 
         public async ValueTask DisposeAsync()

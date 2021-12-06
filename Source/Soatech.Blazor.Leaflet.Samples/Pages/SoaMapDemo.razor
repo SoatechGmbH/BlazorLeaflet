@@ -15,6 +15,7 @@ topSystem.Reactive
     @bind-MaxZoom="ViewModel.MaxZoom" 
     @bind-CurrentZoom="ViewModel.Zoom" 
     @bind-Center="ViewModel.Center.Value"
+    @bind-Bounds="ViewModel.Bounds"
     ShowZoomControl="false" 
     ShowAttributionControl="false">
     <Layers>
@@ -44,6 +45,16 @@ topSystem.Reactive
         <div>Min-Zoom: <input @bind-value="ViewModel.MinZoom" /></div>
         <div>Max-Zoom: <input @bind-value="ViewModel.MaxZoom" /></div>
         <div>Current Zoom: <input @bind-value="ViewModel.Zoom" /></div>
+    </div>
+
+    <div style="margin-top: 15px; margin-bottom: 10px;">
+        <h3>Bounds</h3>
+        <h4>SouthWest</h4>
+        <div>Lat: <input @bind-value="ViewModel.Bounds.SouthWest.Lat" /></div>
+        <div>Lng: <input @bind-value="ViewModel.Bounds.SouthWest.Lng" /></div>
+        <h4>NorthEast</h4>
+        <div>Lat: <input @bind-value="ViewModel.Bounds.NorthEast.Lat" /></div>
+        <div>Lng: <input @bind-value="ViewModel.Bounds.NorthEast.Lng" /></div>
     </div>
 
     @if (ViewModel.SelectedMarkers.Count > 0)

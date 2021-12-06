@@ -48,7 +48,7 @@
         /// geographical bounds, bouncing the user back if the user tries to pan
         /// outside the view.
         /// </summary>
-        public (LatLng sw, LatLng ne)? MaxBounds { get; set; }
+        public LatLngBounds? MaxBounds { get; set; }
 
         public bool ZoomAnimation { get; set; } = true;
         public float ZoomAnimationThreshold { get; set; } = 4;

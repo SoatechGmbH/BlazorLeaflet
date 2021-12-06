@@ -39,7 +39,7 @@ L.Map.prototype.createLayerGroup = function (name, dotNet) {
     groupLayer.name = name;
 
     return groupLayer;
-}
+};
 
 L.Map.prototype.hookEvents = function () {
     const map = this;
@@ -66,13 +66,15 @@ L.Map.prototype.hookEvents = function () {
     });
 
     map.on('move', function (ev) {
-        let newCenter = { type: 'move', value: map.getCenter() };
+        let newCenter = { type: 'move', value: map.getCenter() };        
         netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
     });
 
     map.on('moveend', function (ev) {
         let newCenter = { type: 'moveend', value: map.getCenter() };
-        netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);
+        let newMapBounds = { type: 'moveend', value: [map.getBounds().getSouthWest().wrap(), map.getBounds().getNorthEast().wrap()] };
+        netMap.invokeMethodAsync('NotifyBoundsChanged', newMapBounds);
+        netMap.invokeMethodAsync('NotifyCenterChanged', newCenter);        
     });
 
     map.on('contextmenu', function (ev) {

@@ -1,4 +1,5 @@
-﻿using Soatech.Blazor.Leaflet.Samples.ViewModels;
+﻿using Soatech.Blazor.Leaflet.Layers;
+using Soatech.Blazor.Leaflet.Samples.ViewModels;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -13,12 +14,12 @@ namespace Soatech.Blazor.Leaflet.Samples.Pages
 
         protected override Task OnInitializedAsync()
         {
-            serialDisposable.Disposable = 
+            serialDisposable.Disposable =
                 Observable.Timer(TimeSpan.FromSeconds(5))
-                .SelectMany(_ => 
+                .SelectMany(_ =>
                     _mapControl?.FlyTo(new() { Lat = 53.57532f, Lng = 10.01534f }, 6)
                         .AsTask()
-                        .ToObservable() 
+                        .ToObservable()
                     ?? Observable.Empty<Unit>())
                 .Subscribe(_ =>
                 {
@@ -28,9 +29,6 @@ namespace Soatech.Blazor.Leaflet.Samples.Pages
                         {
                             ViewModel.TileLayer = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
                             ViewModel.MarkerPosition.Value = new() { Lat = 53.57532f, Lng = 10.01534f };
-                            //ViewModel.Center = new();
-                            //ViewModel.MinZoom = 8;
-                            //ViewModel.MaxZoom = 7;
 
                             serialDisposable.Disposable =
                                 Observable.Timer(TimeSpan.FromSeconds(20))
@@ -43,6 +41,28 @@ namespace Soatech.Blazor.Leaflet.Samples.Pages
                 });
 
             return base.OnInitializedAsync();
+        }
+
+        protected override Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                var group = new LayerViewModel();
+                group.Name = "new grouplayer";
+                group.IsVisible = true;
+                ViewModel.Layers.Add(group);
+
+                var marker = new MarkerViewModel()
+                {
+                    Position = new LatLngViewModel(new Models.LatLng(50f, 10f)),
+                    Name = "New Marker"
+                };
+
+                group.AddMarker(marker);
+
+            }
+
+            return base.OnAfterRenderAsync(firstRender);
         }
 
         private ValueTask OnMarkerClicked(MarkerViewModel viewModel)

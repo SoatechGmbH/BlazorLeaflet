@@ -14,6 +14,7 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
         private float _minZoom = 2.0f;
         private float _maxZoom = 20.0f;
         private string _tileLayer = "https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png";
+        private LatLngBounds _bounds = new LatLngBounds();
         private ObservableCollection<LayerViewModel> _layers = new();
         private ObservableCollection<MarkerViewModel> _selectedMarkers = new();
         private Random _random = new Random((int)DateTime.Now.Ticks);
@@ -94,6 +95,12 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
         {
             get => _tileLayer;
             set => this.RaiseAndSetIfChanged(ref _tileLayer, value);
+        }
+
+        public LatLngBounds Bounds
+        {
+            get => _bounds;
+            set => this.RaiseAndSetIfChanged(ref _bounds, value);
         }
 
         public void SelectMarker(MarkerViewModel marker)

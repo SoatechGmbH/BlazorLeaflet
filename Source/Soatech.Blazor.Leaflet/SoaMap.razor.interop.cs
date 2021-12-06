@@ -181,5 +181,12 @@
             Center = e.Value ?? new();
             return ValueTask.CompletedTask;
         }
+
+        [JSInvokable]
+        public ValueTask NotifyBoundsChanged(ValueEvent<Models.LatLng[]> e)
+        {
+            Bounds = new Models.LatLngBounds { SouthWest = e.Value[0], NorthEast=e.Value[1] };
+            return ValueTask.CompletedTask;
+        }
     }
 }
