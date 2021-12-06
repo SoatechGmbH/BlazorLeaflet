@@ -14,21 +14,32 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
         private float _minZoom = 2.0f;
         private float _maxZoom = 20.0f;
         private string _tileLayer = "https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png";
-        private ObservableCollection<MarkerViewModel> _markers = new();
+        private ObservableCollection<LayerViewModel> _layers = new();
         private Random _random = new Random((int)DateTime.Now.Ticks);
 
         public SoaMapDemoViewModel()
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 5; i++)
             {
-                var marker = new MarkerViewModel
+                var layer = new LayerViewModel
                 {
-                    Position = new((_random.NextSingle()*180)-90, (_random.NextSingle() * 360) - 180),
-                    Opacity = _random.NextSingle()
+                    Name = $"Layer {i + 1}",
+                    IsVisible = i == 0 ? true : false
                 };
-                marker.IsDraggable = marker.Opacity > 0.5f;
 
-                Markers.Add(marker);
+                for (int m = 0; m < 100; m++)
+                {
+                    var marker = new MarkerViewModel
+                    {
+                        Position = new((_random.NextSingle() * 180) - 90, (_random.NextSingle() * 360) - 180),
+                        Opacity = _random.NextSingle()
+                    };
+                    marker.IsDraggable = marker.Opacity > 0.5f;
+
+                    layer.Markers.Add(marker);
+                }
+
+                Layers.Add(layer);
             }
         }
 
@@ -72,10 +83,10 @@ namespace Soatech.Blazor.Leaflet.Samples.ViewModels
             }
         }
 
-        public ObservableCollection<MarkerViewModel> Markers
+        public ObservableCollection<LayerViewModel> Layers
         {
-            get => _markers;
-            set => this.RaiseAndSetIfChanged(ref _markers, value);
+            get => _layers;
+            set => this.RaiseAndSetIfChanged(ref _layers, value);
         }
 
         public float CenterLat

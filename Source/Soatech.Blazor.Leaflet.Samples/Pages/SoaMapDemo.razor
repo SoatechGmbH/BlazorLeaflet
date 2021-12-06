@@ -20,9 +20,14 @@
     <Layers>
         <TileLayer @bind-TileSourceTemplate="ViewModel.TileLayer"></TileLayer>
         <Marker @bind-Position="ViewModel.MarkerPosition" Draggable="true"></Marker>
-        @foreach (var marker in ViewModel.Markers)
+        @foreach (var layer in ViewModel.Layers)
         {
-            <Marker @bind-Position="marker.Position" Draggable="marker.IsDraggable" RiseOnHover="marker.IsDraggable" Opacity="marker.Opacity"></Marker>
+            <LayerGroup Name="layer.Name" IsVisible="layer.IsVisible">
+                @foreach (var marker in layer.Markers)
+                {
+                    <Marker @bind-Position="marker.Position" Draggable="marker.IsDraggable" RiseOnHover="marker.IsDraggable" Opacity="marker.Opacity"></Marker>
+                }
+            </LayerGroup>
         }
     </Layers>
 </SoaMap>
@@ -41,4 +46,9 @@
     <div>Lat: <input @bind-value="ViewModel.MarkerPositionLat" /></div>
     <div>Lng: <input @bind-value="ViewModel.MarkerPositionLng" /></div>
 
+    <h3>Layers:</h3>
+    @foreach (var layer in ViewModel.Layers)
+    {
+        <div><input type="checkbox" checked="@layer.IsVisible" @bind-value="layer.IsVisible"  /><span>Show @layer.Name</span></div>
+    }
 </div>

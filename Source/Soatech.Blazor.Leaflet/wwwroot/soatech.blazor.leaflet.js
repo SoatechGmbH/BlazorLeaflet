@@ -9,7 +9,6 @@
                 : undefined;
 
         let map = L.map(id, mapOptions);
-
         map._dotNet = dotNet;
 
         return map;
@@ -20,32 +19,24 @@ L.Map.prototype.createTiles = function (config, dotNet) {
 
     let tileConfig = removeOptionDefaults(config, [ "urlTemplate" ]);
 
-    let tileLayer = L.tileLayer(config.urlTemplate, tileConfig)
-        .addTo(this);
-
-    tileLayer._dotNet = dotNet;
-
+    let tileLayer = L.tileLayer(config.urlTemplate, tileConfig);
     return tileLayer;
 };
 
 L.Map.prototype.createMarker = function (config, dotNet) {
 
     let markerConfig = removeOptionDefaults(config);
+    let markerLayer = L.marker(config.position, markerConfig);
 
-    var markerLayer = L.marker(config.position, markerConfig);
     hookInteractiveEvents(markerLayer, dotNet);
     hookMarkerEvents(markerLayer, dotNet);
-    markerLayer.addTo(this);
-
-    markerLayer._dotNet = dotNet;
-
     return markerLayer;
 };
 
-L.Map.prototype.createLayerGroup = function (dotNet) {
-    let groupLayer = L.layerGroup().addTo(this);
+L.Map.prototype.createLayerGroup = function (name, dotNet) {
 
-    groupLayer._dotNet = dotNet;
+    let groupLayer = L.layerGroup();
+    groupLayer.name = name;
 
     return groupLayer;
 }
@@ -153,6 +144,7 @@ function hookMarkerEvents(layer, dotNet) {
 
 }
 
+
 function cleanupEventArgsForSerialization(eventArgs) {
 
     const propertiesToRemove = [
@@ -174,7 +166,6 @@ function cleanupEventArgsForSerialization(eventArgs) {
 
     return copy;
 }
-
 
 function removeOptionDefaults(options, toRemove) {
 

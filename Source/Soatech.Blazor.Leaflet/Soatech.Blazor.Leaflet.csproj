@@ -29,8 +29,8 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="Layers/GroupLayer.cs" DependentUpon="Layers/GroupLayer.razor" />
-		<Compile Update="Layers/GroupLayer.interop.cs" DependentUpon="Layers/GroupLayer.razor" />
+		<Compile Update="Layers\LayerGroup.cs" DependentUpon="LayerGroup.razor" />
+		<Compile Update="Layers\LayerGroup.interop.cs" DependentUpon="LayerGroup.razor" />
 	</ItemGroup>
 
 </Project>

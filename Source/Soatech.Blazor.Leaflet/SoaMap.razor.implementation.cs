@@ -22,6 +22,8 @@
         private LatLng _center = new(0, 0);
         private (LatLng sw, LatLng ne)? _maxBounds;
         private (LatLng sw, LatLng ne)? _bounds;
+        private bool _isInitialized;
+        private event Action<bool> _onInitialized;
 
         #endregion
 
@@ -153,14 +155,26 @@
 
         #endregion
 
+        public IJSObjectReference? NativeMap { get; private set; }
+
         public ObservableCollection<Layer> MapLayers => _layers;
+
+        public IObservable<Unit> OnInitialized => Observable.FromEvent<bool>(e => _onInitialized += e, e => _onInitialized -= e)
+            .StartWith(_isInitialized)
+            .Where(x => x == true)
+            .Select(_ => Unit.Default)
+            .FirstAsync();
+
+        protected override async Task OnInitializedAsync()
+        {
+            await base.OnInitializedAsync();
+        }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
                 await InitializeJsMap();
-
                 HookParameterChanged();
 
                 _asyncDisposables.Add(this.WhenChanged(nameof(Center))
@@ -184,11 +198,12 @@
                 await HookNativeEvents();
 
                 _asyncDisposables.Add(
-                    _layers.WhenCollectionChanged()
+                    MapLayers.WhenCollectionChanged()
                     .Where(e => e.Action != NotifyCollectionChangedAction.Move)
                     .StartWith(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems: MapLayers, oldItems: new List<Layer>()))
                     .Select(e =>
                     (
+                        Type: e.Action,
                         OldItems: e.OldItems?.Cast<Layer>() ?? Enumerable.Empty<Layer>(),
                         NewItems: e.NewItems?.Cast<Layer>() ?? Enumerable.Empty<Layer>()
                     ))
@@ -200,8 +215,16 @@
                     .SelectMany(e =>
                         Task.WhenAll(
                             e.NewItems.Select(itm => itm.Create().AsTask()))
-                        .ToObservable())
-                    .Subscribe());
+                        .ToObservable()
+                        .Select(_ => e))
+                    .Subscribe(e => 
+                    {
+                        if (e.Type == NotifyCollectionChangedAction.Replace)
+                        {
+                            _isInitialized = true;
+                            _onInitialized?.Invoke(_isInitialized);
+                        }
+                    }));
             }
 
             await base.OnAfterRenderAsync(firstRender);

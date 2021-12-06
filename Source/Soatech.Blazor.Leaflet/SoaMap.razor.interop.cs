@@ -2,13 +2,11 @@
 {
     using Soatech.Blazor.Leaflet.Configuration;
     using Soatech.Blazor.Leaflet.Events;
-    using Soatech.Blazor.Leaflet.Models;
+    using Soatech.Blazor.Leaflet.Layers;
     using System.Drawing;
 
     public partial class SoaMap : IAsyncDisposable
     {
-        private IJSObjectReference? _jsSoaMap;
-
         private async ValueTask InitializeJsMap()
         {
             var mapOptions = new MapOptions
@@ -20,142 +18,147 @@
                 MaxBounds = MaxBounds
             };
 
-            _jsSoaMap = await _jsRuntime.InvokeAsync<IJSObjectReference>("soamap.create", Id, mapOptions, DotNetObjectReference.Create(this));
+            NativeMap = await _jsRuntime.InvokeAsync<IJSObjectReference>("soamap.create", Id, mapOptions, DotNetObjectReference.Create(this));
         }
 
         #region Modifying Map State
 
-        public ValueTask SetView(LatLng coordinate, float zoom, PanOptions options = null)
+        public ValueTask SetView(Models.LatLng coordinate, float zoom, PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("setView", coordinate, zoom, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("setView", coordinate, zoom, options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask SetZoom(float zoom, PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("setZoom", zoom, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("setZoom", zoom, options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask ZoomIn(float delta, ZoomOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("zoomIn", delta, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("zoomIn", delta, options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask ZoomOut(float delta, ZoomOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("zoomOut", delta, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("zoomOut", delta, options) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask SetZoomAround(LatLng coordinate, float zoom, ZoomOptions options = null)
+        public ValueTask SetZoomAround(Models.LatLng coordinate, float zoom, ZoomOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("setZoomAround", coordinate, zoom, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("setZoomAround", coordinate, zoom, options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask SetZoomAround(PointF offset, float zoom, ZoomOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("setZoomAround", offset, zoom, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("setZoomAround", offset, zoom, options) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask FitBounds(LatLng[] bounds, FitBoundsOptions options = null)
+        public ValueTask FitBounds(Models.LatLng[] bounds, FitBoundsOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("fitBounds", bounds, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("fitBounds", bounds, options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask FitWorld(FitBoundsOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("fitWorld", options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("fitWorld", options) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask PanTo(LatLng coordinate, PanOptions options = null)
+        public ValueTask PanTo(Models.LatLng coordinate, PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("panTo", coordinate, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("panTo", coordinate, options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask PanBy(PointF offset, PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("panBy", offset, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("panBy", offset, options) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask FlyTo(LatLng coordinate, float zoom, PanOptions options = null)
+        public ValueTask FlyTo(Models.LatLng coordinate, float zoom, PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("flyTo", coordinate, zoom, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("flyTo", coordinate, zoom, options) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask FlyToBounds(LatLng[] bounds, FitBoundsOptions options = null)
+        public ValueTask FlyToBounds(Models.LatLng[] bounds, FitBoundsOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("flyToBounds", bounds, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("flyToBounds", bounds, options) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask SetMaxBounds(LatLng[] bounds)
+        public ValueTask SetMaxBounds(Models.LatLng[] bounds)
         {
-            return _jsSoaMap?.InvokeVoidAsync("setMaxBounds", bounds) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("setMaxBounds", bounds) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask SetMinZoom(float zoom)
         {
-            return _jsSoaMap?.InvokeVoidAsync("setMinZoom", zoom) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("setMinZoom", zoom) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask SetMaxZoom(float zoom)
         {
-            return _jsSoaMap?.InvokeVoidAsync("setMaxZoom", zoom) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("setMaxZoom", zoom) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask PanInsideBounds(LatLng[] bounds, PanOptions options = null)
+        public ValueTask PanInsideBounds(Models.LatLng[] bounds, PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("panInsideBounds", bounds, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("panInsideBounds", bounds, options) ?? ValueTask.CompletedTask;
         }
 
-        public ValueTask PanInside(LatLng coordinate, PanOptions options = null)
+        public ValueTask PanInside(Models.LatLng coordinate, PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("panInside", coordinate, options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("panInside", coordinate, options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask InvalidateSize(PanOptions options = null)
         {
-            return _jsSoaMap?.InvokeVoidAsync("invalidateSize", options) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("invalidateSize", options) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask InvalidateSize(bool animate)
         {
-            return _jsSoaMap?.InvokeVoidAsync("invalidateSize", animate) ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("invalidateSize", animate) ?? ValueTask.CompletedTask;
         }
 
         public ValueTask Stop()
         {
-            return _jsSoaMap?.InvokeVoidAsync("stop") ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("stop") ?? ValueTask.CompletedTask;
+        }
+
+        public ValueTask AddLayer(Layer layer)
+        {
+            return NativeMap?.InvokeVoidAsync("addLayer", layer.NativeLayer) ?? ValueTask.CompletedTask;
         }
 
         #endregion
 
-        public ValueTask<IJSObjectReference?> CreateTileLayer(TileLayerOptions config, Layers.TileLayer owner)
+        public ValueTask<IJSObjectReference?> CreateTileLayer(TileLayerOptions config, TileLayer owner)
         {
-            if (_jsSoaMap == null) throw new InvalidOperationException("Map not initialized.");
-            return _jsSoaMap.InvokeAsync<IJSObjectReference?>("createTiles", config, DotNetObjectReference.Create(owner));
+            if (NativeMap == null) throw new InvalidOperationException("Map not initialized.");
+            return NativeMap.InvokeAsync<IJSObjectReference?>("createTiles", config, DotNetObjectReference.Create(owner));
         }
 
-        public ValueTask<IJSObjectReference?> CreateMarker(MarkerOptions options, Layers.Marker marker)
+        public ValueTask<IJSObjectReference?> CreateMarker(MarkerOptions options, Marker marker)
         {
-            if (_jsSoaMap == null) throw new InvalidOperationException("Map not initialized.");
-            return _jsSoaMap.InvokeAsync<IJSObjectReference?>("createMarker", options, DotNetObjectReference.Create(marker));
+            if (NativeMap == null) throw new InvalidOperationException("Map not initialized.");
+            return NativeMap.InvokeAsync<IJSObjectReference?>("createMarker", options, DotNetObjectReference.Create(marker));
         }
 
-        public ValueTask<IJSObjectReference?> CreateGroupLayer(Layers.GroupLayer owner)
+        public ValueTask<IJSObjectReference?> CreateGroupLayer(string name, LayerGroup owner)
         {
-            if (_jsSoaMap == null) throw new InvalidOperationException("Map not initialized.");
-            return _jsSoaMap.InvokeAsync<IJSObjectReference?>("createLayerGroup", DotNetObjectReference.Create(owner));
+            if (NativeMap == null) throw new InvalidOperationException("Map not initialized.");
+            return NativeMap.InvokeAsync<IJSObjectReference?>("createLayerGroup", DotNetObjectReference.Create(owner));
         }
 
         public ValueTask HookNativeEvents()
         {
-            return _jsSoaMap?.InvokeVoidAsync("hookEvents") ?? ValueTask.CompletedTask;
+            return NativeMap?.InvokeVoidAsync("hookEvents") ?? ValueTask.CompletedTask;
         }
 
         private async ValueTask DisposeInteropAsync()
         {
-            if (_jsSoaMap != null)
+            if (NativeMap != null)
             {
-                await _jsSoaMap.DisposeAsync();
-                _jsSoaMap = null;
+                await NativeMap.DisposeAsync();
+                NativeMap = null;
             }
         }
 
@@ -173,7 +176,7 @@
         }
 
         [JSInvokable]
-        public ValueTask NotifyCenterChanged(ValueEvent<LatLng> e)
+        public ValueTask NotifyCenterChanged(ValueEvent<Models.LatLng> e)
         {
             Center = e.Value ?? new();
             return ValueTask.CompletedTask;

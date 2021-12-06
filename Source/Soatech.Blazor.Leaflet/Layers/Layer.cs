@@ -5,6 +5,7 @@
     public abstract partial class Layer : ComponentBase, IAsyncDisposable, INotifyPropertyChanged
     {
         private string _id = Guid.NewGuid().ToString();
+        private bool _isVisible = true;
 
         protected CompositeAsyncDisposable AsyncDisposables { get; } = new CompositeAsyncDisposable();
 
@@ -17,13 +18,24 @@
             set => _id = value;
         }
 
+        [Parameter]
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set => SetAndRaiseIfChanged(ref _isVisible, value);
+        }
+
+        [Parameter]
+        public Action<bool>? IsVisibleChanged { get; set; }
+
+
         [CascadingParameter(Name = nameof(ParentMap))]
         public SoaMap? ParentMap { get; set; }
 
         [CascadingParameter(Name = nameof(ParentGroup))]
-        public GroupLayer? ParentGroup { get; set; }
+        public LayerGroup? ParentGroup { get; set; }
 
-        protected IJSObjectReference? NativeLayer { get; set; }
+        public IJSObjectReference? NativeLayer { get; protected set; }
 
         public async ValueTask DisposeAsync()
         {
@@ -36,7 +48,8 @@
         {
             NativeLayer = await CreateNative();
             AsyncDisposables.Add(AsyncDisposable.Create(() => Remove()));
-            AsyncDisposables.Add(NativeLayer);
+            AsyncDisposables.Add(AsyncDisposable.Create(DisposeNativeLayerAsync));
+            await AddToParentLayer();
         }
 
         protected abstract ValueTask<IJSObjectReference?> CreateNative();
@@ -44,7 +57,26 @@
         protected override void OnInitialized()
         {
             if (ParentMap == null) throw new InvalidOperationException("Parent may not be null.");
-            ParentMap.MapLayers.Add(this);
+            if (ParentGroup == null)
+                ParentMap.MapLayers.Add(this);
+            else
+                ParentGroup.MapLayers.Add(this);
+
+            AsyncDisposables.Add(this.WhenChanged(nameof(IsVisible))
+                .Select(_ => IsVisible)
+                .Subscribe(ac => IsVisibleChanged?.Invoke(ac)));
+
+            AsyncDisposables.Add(
+                this.WhenChanged(nameof(IsVisible))
+                .Throttle(TimeSpan.FromMilliseconds(300))
+                .Select(_ => IsVisible)
+                .Select(v => v
+                    ? AddToParentLayer().AsTask().ToObservable()
+                    : Remove().AsTask().ToObservable())
+                .Switch()
+                .Subscribe()
+            );
+
             base.OnInitialized();
         }
 
@@ -54,6 +86,8 @@
             {
                 if (ParentMap?.MapLayers != null && ParentMap.MapLayers.Contains(this))
                     ParentMap.MapLayers.Remove(this);
+                if (ParentGroup?.MapLayers != null && ParentGroup.MapLayers.Contains(this))
+                    ParentGroup.MapLayers.Remove(this);
                 await AsyncDisposables.DisposeAsync();
             }
         }
@@ -77,6 +111,23 @@
             backingField = newValue;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             return true;
+        }
+
+        private ValueTask AddToParentLayer()
+        {
+            if (!IsVisible) return ValueTask.CompletedTask;
+
+            if (ParentGroup == null)
+                return AddTo(ParentMap);
+            else
+                return AddTo(ParentGroup);
+        }
+
+        private ValueTask DisposeNativeLayerAsync()
+        {
+            var nativeLayer = NativeLayer;
+            NativeLayer = null;
+            return NativeLayer?.DisposeAsync() ?? ValueTask.CompletedTask;
         }
     }
 }
