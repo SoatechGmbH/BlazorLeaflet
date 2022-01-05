@@ -24,8 +24,8 @@ L.Map.prototype.createTiles = function (config, dotNet) {
 };
 
 L.Map.prototype.createMarker = function (config, dotNet) {
-
-    let markerConfig = removeOptionDefaults(config);
+    let markerConfig = removeOptionDefaults(config, [ "icon" ]);
+    markerConfig.icon = L.BeautifyIcon.icon(config.icon);
     let markerLayer = L.marker(config.position, markerConfig);
 
     hookInteractiveEvents(markerLayer, dotNet);

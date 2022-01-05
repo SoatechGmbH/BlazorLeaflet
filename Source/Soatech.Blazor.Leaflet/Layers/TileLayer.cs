@@ -39,8 +39,8 @@
             var config = new TileLayerOptions()
             {
                 UrlTemplate = TileSourceTemplate,
-                TileSize = 512,
-                ZoomOffset = -1,
+                TileSize = 256,
+                ZoomOffset = 0,
                 Attribution = "Map data &copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors, Imagery © <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a>"
             };
 

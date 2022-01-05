@@ -7,7 +7,7 @@
     public partial class Marker : InteractiveLayer
     {
         private LatLng _position = new(0, 0);
-        private Icon _icon;
+        private CustomIconOptions _icon = new CustomIconOptions();
         private bool _keyboard = true;
         private string _title = "";
         private string _alt = "";
@@ -47,10 +47,10 @@
         }
 
         /// <summary>
-        /// Icon instance to use for rendering the marker.  If not specified, a default icon is used.
+        /// Option for rendering a custom icon. If not specified the default values are used.
         /// </summary>
         [Parameter]
-        public Icon Icon 
+        public CustomIconOptions Icon 
         {
             get => _icon; 
             set => this.SetAndRaiseIfChanged(ref _icon, value);
@@ -253,7 +253,7 @@
             var options = new MarkerOptions
             {
                 Position = Position,
-                //Icon = this.Icon,
+                Icon = Icon,
                 Keyboard = Keyboard,
                 Title = Title,
                 Alt = Alt,

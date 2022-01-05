@@ -6,7 +6,7 @@
     public class MarkerOptions
     {
         public LatLng Position { get; set; } = new LatLng(0, 0);
-        //public Icon Icon { get; set; } = new Icon();
+        public CustomIconOptions Icon { get; set; } = new CustomIconOptions();
         public bool Keyboard { get; set; } = true;
         public string Title { get; set; } = "";
         public string Alt { get; set; } = "";
